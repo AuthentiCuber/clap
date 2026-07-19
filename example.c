@@ -4,9 +4,9 @@
 int main(int argc, char **argv) {
     // { "option-text", num-parameters, "help-text" }
     clap_arg myargs[] = {
-        {"--option", 1, "configure a thing"},
-        {"--help", 0, "show this help message"},
-        {"run", 1, "run a file"},
+        {"--option", "-o", 1, "configure a thing"},
+        {"--help", "-h", 0, "show this help message"},
+        {"run", "", 1, "run a file"},
     };
     clap_arg_array expected = {
         myargs,
@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    // use `hasFlag` to check for the presence of a flag
+    // use `has_flag` to check for the presence of a flag
     // i.e. it has no arguments/you dont need them
     if (clap_has_flag(options, "--help")) {
         // `showHelp` generates and prints a help message
@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
     // This variable is reused for each getOpt
     clap_parsed *opt;
 
-    // getOpt returns the actual Option, or NULL if it
+    // get_opt returns the parsed option, or NULL if it
     // wasn't passed
     if ((opt = clap_get_opt(options, "--option")) != NULL) {
         size_t value = strtoul(opt->params[0], NULL, 10);
