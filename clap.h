@@ -14,6 +14,7 @@
 
 typedef struct {
     char *name;
+    char *alias;
     int num_params;
     char *help;
 } clap_arg;
@@ -22,6 +23,7 @@ CLAP_MAKE_ARRAY(clap_arg, clap_arg_array);
 
 typedef struct {
     char *name;
+    char *alias;
     char **params;
     int num_params;
 } clap_parsed;
@@ -61,7 +63,8 @@ int clap_parse_args(clap_arg_array *to_parse, int argc, char **argv,
         for (size_t expected_arg_idx = 0; expected_arg_idx < to_parse->count;
              expected_arg_idx++) {
             clap_arg curr_arg = to_parse->items[expected_arg_idx];
-            if (strcmp(inp, curr_arg.name) == 0) {
+            if (strcmp(inp, curr_arg.name) == 0 ||
+                strcmp(inp, curr_arg.alias) == 0) {
                 char **params = calloc(curr_arg.num_params, sizeof(char *));
                 if (params == NULL) { return 2; }
 
@@ -73,8 +76,8 @@ int clap_parse_args(clap_arg_array *to_parse, int argc, char **argv,
                     }
                     params[param_head_idx++] = argv[++argv_idx];
                 }
-                options->items[options->count++] =
-                    (clap_parsed){curr_arg.name, params, curr_arg.num_params};
+                options->items[options->count++] = (clap_parsed){
+                    curr_arg.name, curr_arg.alias, params, curr_arg.num_params};
             }
         }
     }
@@ -84,7 +87,9 @@ int clap_parse_args(clap_arg_array *to_parse, int argc, char **argv,
 clap_parsed *clap_get_opt(clap_parsed_array *options, const char *opt_name) {
     for (size_t i = 0; i < options->count; i++) {
         clap_parsed *opt = &options->items[i];
-        if (strcmp(opt->name, opt_name) == 0) return opt;
+        if (strcmp(opt->name, opt_name) == 0 ||
+            strcmp(opt->alias, opt_name) == 0)
+            return opt;
     }
     return NULL;
 }
@@ -103,18 +108,22 @@ void clap_show_help(clap_arg_array *expected, const char *prog_name,
     }
     printf("\n\nAvailable options:\n");
 
+    // this gets printed for each argument an option takes
     const char *arg_str = "<arg>";
+    // find the longest resulting option (for alignment)
     int longest_len = 0;
     for (size_t i = 0; i < expected->count; i++) {
         clap_arg opt = expected->items[i];
-        int curr_len =
-            strlen(opt.name) + opt.num_params * (1 + strlen(arg_str));
+        int curr_len = strlen(opt.alias) + 2 + strlen(opt.name) +
+                       opt.num_params * (1 + strlen(arg_str));
         if (curr_len > longest_len) { longest_len = curr_len; }
     }
     for (size_t i = 0; i < expected->count; i++) {
         clap_arg opt = expected->items[i];
         printf("  ");
-        int line_len = printf("%s", opt.name);
+        int line_len = 0;
+        if (*opt.alias != '\0') { line_len += printf("%s, ", opt.alias); }
+        line_len += printf("%s", opt.name);
         for (int j = 0; j < opt.num_params; j++) {
             line_len += printf(" %s", arg_str);
         }
