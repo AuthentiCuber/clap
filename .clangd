@@ -1,0 +1,12 @@
+CompileFlags:
+  Add: [-xc, -std=c11, -Wall, -Wextra, -Wpedantic]
+
+Documentation:
+  CommentFormat: Markdown
+
+---
+
+If:
+  PathMatch: clap.h
+CompileFlags:
+  Add: [-DCLAP_IMPLEMENTATION]
