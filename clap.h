@@ -28,13 +28,19 @@ typedef struct {
 
 CLAP_MAKE_ARRAY(clap_parsed, clap_parsed_array);
 
+// Parses argv according to to_parse, storing the results in parsed.
 int clap_parse_args(clap_arg_array *to_parse, int argc, char **argv,
                     clap_parsed_array *options);
 
+// Searches in options for opt_name and returns a pointer to it if found, or
+// NULL otherwise.
 clap_parsed *clap_get_opt(clap_parsed_array *options, const char *opt_name);
 
+// Checks whether flag_name was passed or not.
 bool clap_has_flag(clap_parsed_array *options, const char *flag_name);
 
+// Prints usage/help text, generated from the expected arguments. You can
+// provide your own usage string, or leave it NULL for a generic one.
 void clap_show_help(clap_arg_array *expected, const char *prog_name,
                     const char *usage);
 
@@ -44,7 +50,12 @@ void clap_show_help(clap_arg_array *expected, const char *prog_name,
 
 int clap_parse_args(clap_arg_array *to_parse, int argc, char **argv,
                     clap_parsed_array *options) {
+    if (options == NULL || to_parse == NULL) return 2;
+
+    options->count = 0;
     options->items = calloc(to_parse->count, sizeof(clap_parsed));
+    if (options->items == NULL) { return 2; }
+
     for (int argv_idx = 1; argv_idx < argc; argv_idx++) {
         char *inp = argv[argv_idx];
         for (size_t expected_arg_idx = 0; expected_arg_idx < to_parse->count;
@@ -52,9 +63,14 @@ int clap_parse_args(clap_arg_array *to_parse, int argc, char **argv,
             clap_arg curr_arg = to_parse->items[expected_arg_idx];
             if (strcmp(inp, curr_arg.name) == 0) {
                 char **params = calloc(curr_arg.num_params, sizeof(char *));
+                if (params == NULL) { return 2; }
+
                 int param_head_idx = 0;
                 for (int i = 0; i < curr_arg.num_params; i++) {
-                    if (argv_idx + 1 >= argc) return 1;
+                    if (argv_idx + 1 >= argc) {
+                        free(params);
+                        return 1;
+                    }
                     params[param_head_idx++] = argv[++argv_idx];
                 }
                 options->items[options->count++] =

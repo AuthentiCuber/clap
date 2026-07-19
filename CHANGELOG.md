@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+- Function documentation comments in header section.
+
+### Fixed
+
+- Set `options->count = 0` at the start of `clap_parse_args`, was uninitialised.
+- `free(params)` when parsing fails because of too few arguments.
+- Check that result of `calloc` is not NULL.
+
 ## [1.0.0] - 2026-07-19
 
 ### Changed
