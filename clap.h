@@ -30,9 +30,12 @@ typedef struct {
 
 CLAP_MAKE_ARRAY(clap_parsed, clap_parsed_array);
 
+CLAP_MAKE_ARRAY(char *, clap_unexpected_array);
+
 // Parses argv according to to_parse, storing the results in parsed.
 int clap_parse_args(clap_arg_array *to_parse, int argc, char **argv,
-                    clap_parsed_array *options);
+                    clap_parsed_array *options,
+                    clap_unexpected_array *unexpected);
 
 // Searches in options for opt_name and returns a pointer to it if found, or
 // NULL otherwise.
@@ -51,25 +54,33 @@ void clap_show_help(clap_arg_array *expected, const char *prog_name,
 #ifdef CLAP_IMPLEMENTATION
 
 int clap_parse_args(clap_arg_array *to_parse, int argc, char **argv,
-                    clap_parsed_array *options) {
-    if (options == NULL || to_parse == NULL) return 2;
+                    clap_parsed_array *options,
+                    clap_unexpected_array *unexpected) {
+    if (options == NULL || to_parse == NULL || unexpected == NULL) return 2;
 
     options->count = 0;
     options->items = calloc(to_parse->count, sizeof(clap_parsed));
-    if (options->items == NULL) { return 2; }
+    if (options->items == NULL) return 2;
+
+    unexpected->count = 0;
+    unexpected->items = calloc(100, sizeof(char *));
+    if (unexpected->items == NULL) return 2;
 
     for (int argv_idx = 1; argv_idx < argc; argv_idx++) {
-        char *inp = argv[argv_idx];
+        char *curr_passed_arg = argv[argv_idx];
+        bool expected = false;
         for (size_t expected_arg_idx = 0; expected_arg_idx < to_parse->count;
              expected_arg_idx++) {
-            clap_arg curr_arg = to_parse->items[expected_arg_idx];
-            if (strcmp(inp, curr_arg.name) == 0 ||
-                strcmp(inp, curr_arg.alias) == 0) {
-                char **params = calloc(curr_arg.num_params, sizeof(char *));
-                if (params == NULL) { return 2; }
+            clap_arg curr_expected_arg = to_parse->items[expected_arg_idx];
+            if (strcmp(curr_passed_arg, curr_expected_arg.name) == 0 ||
+                strcmp(curr_passed_arg, curr_expected_arg.alias) == 0) {
+                expected = true;
+                char **params =
+                    calloc(curr_expected_arg.num_params, sizeof(char *));
+                if (params == NULL) return 2;
 
                 int param_head_idx = 0;
-                for (int i = 0; i < curr_arg.num_params; i++) {
+                for (int i = 0; i < curr_expected_arg.num_params; i++) {
                     if (argv_idx + 1 >= argc) {
                         free(params);
                         return 1;
@@ -77,8 +88,12 @@ int clap_parse_args(clap_arg_array *to_parse, int argc, char **argv,
                     params[param_head_idx++] = argv[++argv_idx];
                 }
                 options->items[options->count++] = (clap_parsed){
-                    curr_arg.name, curr_arg.alias, params, curr_arg.num_params};
+                    curr_expected_arg.name, curr_expected_arg.alias, params,
+                    curr_expected_arg.num_params};
             }
+        }
+        if (!expected) {
+            unexpected->items[unexpected->count++] = curr_passed_arg;
         }
     }
     return 0;

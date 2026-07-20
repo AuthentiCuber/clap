@@ -1,10 +1,11 @@
+#include <stdlib.h>
 #define CLAP_IMPLEMENTATION
 #include "clap.h"
 
 int main(int argc, char **argv) {
     // { "option-text", num-parameters, "help-text" }
     clap_arg myargs[] = {
-        {"--option", "-o", 1, "configure a thing"},
+        {"--option", "-o", 1, "configure a numeric setting"},
         {"--help", "-h", 0, "show this help message"},
         {"run", "", 1, "run a file"},
     };
@@ -15,9 +16,11 @@ int main(int argc, char **argv) {
 
     // allocate space for the parsed args
     clap_parsed_array *options = malloc(sizeof(clap_parsed_array));
-    // parsing populates `options` from argv
-    int parseErr = clap_parse_args(&expected, argc, argv, options);
-    if (parseErr != 0) { // non-zero means error
+    // as well as for any positianal/unexpected arguments
+    clap_unexpected_array *unexpected = malloc(sizeof(clap_unexpected_array));
+    // parsing populates `options`, `unexpected` from argv
+    int parseErr = clap_parse_args(&expected, argc, argv, options, unexpected);
+    if (parseErr) { // non-zero means error
         fprintf(stderr, "failed to parse args!");
         return 1;
     }
@@ -34,7 +37,8 @@ int main(int argc, char **argv) {
     clap_parsed *opt;
 
     // get_opt returns the parsed option, or NULL if it
-    // wasn't passed
+    // wasn't passed. get_opt ant has_flag also check for
+    // the provided aliases
     if ((opt = clap_get_opt(options, "--option")) != NULL) {
         size_t value = strtoul(opt->params[0], NULL, 10);
         printf("Setting something to %zu\n", value);
@@ -42,6 +46,13 @@ int main(int argc, char **argv) {
 
     if ((opt = clap_get_opt(options, "run")) != NULL) {
         printf("Running %s...\n", opt->params[0]);
+        return 0;
+    }
+
+    // use this for when you have (multiple) positional arguments
+    // that aren't part of a subcommand
+    if (unexpected->count > 0) {
+        printf("Doing something with %s\n", unexpected->items[0]);
         return 0;
     }
 
