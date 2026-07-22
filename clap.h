@@ -1,3 +1,8 @@
+/*
+    clap 1.1.0 - Public Domain - https://github.com/AuthentiCuber/clap
+    A basic command line argument parser
+*/
+
 #ifndef CLAP_H_
 #define CLAP_H_
 
