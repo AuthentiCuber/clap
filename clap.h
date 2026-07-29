@@ -1,5 +1,5 @@
 /*
-    clap 1.1.0 - Public Domain - https://github.com/AuthentiCuber/clap
+    clap 1.1.1 - Public Domain - https://github.com/AuthentiCuber/clap
     A basic command line argument parser
 */
 
