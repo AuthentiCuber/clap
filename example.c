@@ -3,7 +3,7 @@
 #include "clap.h"
 
 int main(int argc, char **argv) {
-    // { "option-text", num-parameters, "help-text" }
+    // { "option-text", "alias", num-parameters, "help-text" }
     clap_arg myargs[] = {
         {"--option", "-o", 1, "configure a numeric setting"},
         {"--help", "-h", 0, "show this help message"},
@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
     // use `has_flag` to check for the presence of a flag
     // i.e. it has no arguments/you dont need them
     if (clap_has_flag(options, "--help")) {
-        // `showHelp` generates and prints a help message
+        // `show_help` generates and prints a help message
         clap_show_help(&expected, argv[0], NULL);
         return 0;
     }
@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
     clap_parsed *opt;
 
     // get_opt returns the parsed option, or NULL if it
-    // wasn't passed. get_opt ant has_flag also check for
+    // wasn't passed. get_opt and has_flag also check for
     // the provided aliases
     if ((opt = clap_get_opt(options, "--option")) != NULL) {
         size_t value = strtoul(opt->params[0], NULL, 10);
