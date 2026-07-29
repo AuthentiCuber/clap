@@ -20,7 +20,7 @@
 typedef struct {
     char *name;
     char *alias;
-    int num_params;
+    unsigned int num_params;
     char *help;
 } clap_arg;
 
@@ -30,7 +30,7 @@ typedef struct {
     char *name;
     char *alias;
     char **params;
-    int num_params;
+    unsigned int num_params;
 } clap_parsed;
 
 CLAP_MAKE_ARRAY(clap_parsed, clap_parsed_array);
@@ -85,7 +85,8 @@ int clap_parse_args(clap_arg_array *to_parse, int argc, char **argv,
                 if (params == NULL) return 2;
 
                 int param_head_idx = 0;
-                for (int i = 0; i < curr_expected_arg.num_params; i++) {
+                for (unsigned int i = 0; i < curr_expected_arg.num_params;
+                     i++) {
                     if (argv_idx + 1 >= argc) {
                         free(params);
                         return 1;
@@ -144,7 +145,7 @@ void clap_show_help(clap_arg_array *expected, const char *prog_name,
         int line_len = 0;
         if (*opt.alias != '\0') { line_len += printf("%s, ", opt.alias); }
         line_len += printf("%s", opt.name);
-        for (int j = 0; j < opt.num_params; j++) {
+        for (unsigned int j = 0; j < opt.num_params; j++) {
             line_len += printf(" %s", arg_str);
         }
         while (line_len < longest_len) {
